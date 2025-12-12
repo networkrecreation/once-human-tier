@@ -1,4 +1,3 @@
-/* ====== 全体デザイン ====== */
 body {
     font-family: Arial, sans-serif;
     background: #111;
@@ -18,14 +17,14 @@ h1 {
     margin-bottom: 30px;
 }
 
-/* ====== Tier 全体 ====== */
+/* Tier block全体 */
 .tier-section {
     margin-bottom: 25px;
     border-radius: 10px;
     overflow: hidden;
 }
 
-/* Tier タイトル部分（背景色は tier-○ クラスで調整） */
+/* Tierタイトル */
 .tier-title {
     font-size: 26px;
     font-weight: bold;
@@ -33,31 +32,32 @@ h1 {
     color: #111;
 }
 
-/* ====== Tier 色の指定 ====== */
+/* Tierごとの色 */
 .tier-S { background: #ff4f4f; }   /* 赤 */
 .tier-A { background: #ff914d; }   /* オレンジ */
-.tier-B { background: #ffe066; }   /* 黄色 */
+.tier-B { background: #ffe066; }   /* 黄 */
 .tier-C { background: #6edb6e; }   /* 緑 */
-.tier-D { background: #4dbbff; }   /* 青 */
+.tier-D { background: #4dbbff; }   /* 水色 */
 .tier-E { background: #b38cff; }   /* 紫 */
 .tier-F { background: #999999; }   /* グレー */
 
-/* ====== アイテム表示部分 ====== */
+/* アイテムを横並びで表示 */
 .tier-items {
     background: #222;
     padding: 15px;
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
+    justify-content: flex-start;
 }
 
-/* 各アイテム */
+/* 個々のアイテム */
 .item {
     width: 120px;
     text-align: center;
 }
 
-/* 武器画像 */
+/* 画像 */
 .item img {
     width: 80px;
     height: 80px;
@@ -67,7 +67,7 @@ h1 {
     padding: 8px;
 }
 
-/* 武器名 */
+/* 名前 */
 .name {
     margin-top: 6px;
     font-size: 15px;
