@@ -5,8 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Once Human Tier</title>
 
-<!-- 外部CSS -->
 <link rel="stylesheet" href="tier.css">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+    padding: 20px;
+}
+h1 { margin-bottom: 5px; }
+.subtitle { opacity: 0.8; margin-bottom: 20px; }
+.tier-section {
+    margin-bottom: 30px;
+    padding: 10px;
+    background: #222;
+    border-radius: 8px;
+}
+.tier-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.item {
+    display: flex;
+    align-items: center;
+    margin: 6px 0;
+}
+.item img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    margin-right: 10px;
+    border-radius: 5px;
+    background: #333;
+}
+.name { font-size: 18px; }
+</style>
 </head>
 
 <body>
@@ -16,55 +51,58 @@
 <div id="content"></div>
 
 <script>
-// ⭐ Google Sheets CSV URL（あなたのシート ID）
+// Google Sheets
 const sheetID = "1vAozJYflA2QBeDXG_LmIo_SmHWFleFy3ZolVQsADZ8s";
 const sheetName = "once-human-tier";
 
 const csvUrl =
   `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
-// CSV → JSON 変換
+// CSV → JSON
 function parseCSV(text) {
-    const lines = text.split("\n").filter(Boolean);
-    const headers = lines[0].split(",");
-    return lines.slice(1).map(row => {
-        const cols = row.split(",");
+    const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
+    const headers = rows[0].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+    return rows.slice(1).map(row => {
+        const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
         const obj = {};
         headers.forEach((h, i) => {
-            obj[h.trim()] = cols[i] ? cols[i].trim() : "";
+            obj[h.replace(/"/g, "").trim()] =
+              cols[i] ? cols[i].replace(/"/g, "").trim() : "";
         });
         return obj;
     });
 }
 
-// 表示処理
+// 表示順指定（必要に応じて自由に変更可）
+const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
+
 fetch(csvUrl)
   .then(res => res.text())
   .then(text => {
       const data = parseCSV(text);
-
-      // Tier ごとにグループ化
       const groups = {};
+
       data.forEach(item => {
           if (!groups[item.tier]) groups[item.tier] = [];
           groups[item.tier].push(item);
       });
 
-      // HTML 出力
       const container = document.getElementById("content");
-      Object.keys(groups).sort().forEach(tier => {
+
+      tierOrder.forEach(tier => {
+          if (!groups[tier]) return;
+
           const section = document.createElement("div");
           section.className = "tier-section";
-
           section.innerHTML += `<div class="tier-title">Tier ${tier}</div>`;
 
           groups[tier].forEach(item => {
+              const imagePath = item.image.replace(/^https?:\/\/[^/]+\/once-human-tier\//, "");
               section.innerHTML += `
                 <div class="item">
-                    <img src="${item.image}" />
+                    <img src="${imagePath}" />
                     <div class="name">${item.name}</div>
-                </div>
-              `;
+                </div>`;
           });
 
           container.appendChild(section);
