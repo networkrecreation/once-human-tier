@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Once Human Tier</title>
 
-<link rel="stylesheet" href="tier.css">
-
 <style>
 body {
     font-family: Arial, sans-serif;
@@ -14,33 +12,71 @@ body {
     color: #fff;
     padding: 20px;
 }
-h1 { margin-bottom: 5px; }
-.subtitle { opacity: 0.8; margin-bottom: 20px; }
-.tier-section {
+
+h1 {
+    font-size: 36px;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    opacity: 0.7;
     margin-bottom: 30px;
-    padding: 10px;
-    background: #222;
-    border-radius: 8px;
 }
+
+/* ↓ Tier デザイン */
+.tier-section {
+    margin-bottom: 25px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
 .tier-title {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: bold;
-    margin-bottom: 10px;
+    padding: 12px;
+    color: #111;
 }
-.item {
+
+/* Tier 色 */
+.tier-S { background: #ff4f4f; }
+.tier-A { background: #ff914d; }
+.tier-B { background: #ffe066; }
+.tier-C { background: #6edb6e; }
+.tier-D { background: #4dbbff; }
+.tier-E { background: #b38cff; }
+.tier-F { background: #999999; }
+
+/* アイテム一覧 */
+.tier-items {
+    background: #222;
+    padding: 15px;
     display: flex;
-    align-items: center;
-    margin: 6px 0;
+    flex-wrap: wrap;
+    gap: 12px;
 }
+
+/* アイテム1つ分 */
+.item {
+    width: 120px;
+    text-align: center;
+}
+
+/* 武器画像 */
 .item img {
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
     object-fit: contain;
-    margin-right: 10px;
-    border-radius: 5px;
+    border-radius: 8px;
     background: #333;
+    padding: 8px;
 }
-.name { font-size: 18px; }
+
+.name {
+    margin-top: 6px;
+    font-size: 15px;
+}
 </style>
 </head>
 
@@ -58,22 +94,22 @@ const sheetName = "once-human-tier";
 const csvUrl =
   `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
-// CSV → JSON
+/* CSV → JSON */
 function parseCSV(text) {
-    const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
-    const headers = rows[0].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-    return rows.slice(1).map(row => {
-        const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+    const rows = text.split(/\r?\n/).filter(r => r.trim());
+    const headers = rows[0].split(",").map(h => h.trim());
+
+    return rows.slice(1).map(r => {
+        const cols = r.split(",");
         const obj = {};
         headers.forEach((h, i) => {
-            obj[h.replace(/"/g, "").trim()] =
-              cols[i] ? cols[i].replace(/"/g, "").trim() : "";
+            obj[h] = cols[i]?.trim() ?? "";
         });
         return obj;
     });
 }
 
-// 表示順指定（必要に応じて自由に変更可）
+// Tier の表示順
 const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
 
 fetch(csvUrl)
@@ -94,17 +130,23 @@ fetch(csvUrl)
 
           const section = document.createElement("div");
           section.className = "tier-section";
-          section.innerHTML += `<div class="tier-title">Tier ${tier}</div>`;
+
+          // Tier タイトル（色つき）
+          section.innerHTML +=
+            `<div class="tier-title tier-${tier}">Tier ${tier}</div>`;
+
+          const itemsBox = document.createElement("div");
+          itemsBox.className = "tier-items";
 
           groups[tier].forEach(item => {
-              const imagePath = item.image.replace(/^https?:\/\/[^/]+\/once-human-tier\//, "");
-              section.innerHTML += `
+              itemsBox.innerHTML += `
                 <div class="item">
-                    <img src="${imagePath}" />
+                    <img src="${item.image}" />
                     <div class="name">${item.name}</div>
                 </div>`;
           });
 
+          section.appendChild(itemsBox);
           container.appendChild(section);
       });
   });
