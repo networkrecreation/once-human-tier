@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Once Human Tier</title>
 
-<!-- 外部 CSS -->
+<!-- 外部CSS -->
 <link rel="stylesheet" href="tier.css">
-
 </head>
 
 <body>
@@ -17,31 +16,39 @@
 <div id="content"></div>
 
 <script>
-// Google Sheets
+// ==============================
+// Google Sheets 設定
+// ==============================
 const sheetID = "1vAozJYflA2QBeDXG_LmIo_SmHWFleFy3ZolVQsADZ8s";
 const sheetName = "once-human-tier";
 
 const csvUrl =
   `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
-/* CSV → JSON */
+// ==============================
+// CSV → JSON（壊れない版）
+// ==============================
 function parseCSV(text) {
-    const rows = text.split(/\r?\n/).filter(r => r.trim());
-    const headers = rows[0].split(",").map(h => h.trim());
+    const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
+    const headers = rows[0].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
 
-    return rows.slice(1).map(r => {
-        const cols = r.split(",");
+    return rows.slice(1).map(row => {
+        const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
         const obj = {};
         headers.forEach((h, i) => {
-            obj[h] = cols[i]?.trim() ?? "";
+            obj[h.replace(/"/g, "").trim()] =
+                cols[i] ? cols[i].replace(/"/g, "").trim() : "";
         });
         return obj;
     });
 }
 
-// Tierの順序
+// Tier 表示順
 const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
 
+// ==============================
+// データ取得 & 描画
+// ==============================
 fetch(csvUrl)
   .then(res => res.text())
   .then(text => {
@@ -61,7 +68,7 @@ fetch(csvUrl)
           const section = document.createElement("div");
           section.className = "tier-section";
 
-          // Tier タイトル
+          // Tier タイトル（色付き）
           section.innerHTML +=
             `<div class="tier-title tier-${tier}">Tier ${tier}</div>`;
 
@@ -71,14 +78,18 @@ fetch(csvUrl)
           groups[tier].forEach(item => {
               itemsBox.innerHTML += `
                 <div class="item">
-                    <img src="${item.image}" />
+                    <img src="${item.image}" alt="${item.name}">
                     <div class="name">${item.name}</div>
-                </div>`;
+                </div>
+              `;
           });
 
           section.appendChild(itemsBox);
           container.appendChild(section);
       });
+  })
+  .catch(err => {
+      console.error("CSV 読み込みエラー:", err);
   });
 </script>
 
