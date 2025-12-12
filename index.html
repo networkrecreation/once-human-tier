@@ -1,11 +1,76 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Once Human Tier</title>
-  </head>
-  <body>
-    <h1>Once Human Tier Test Page</h1>
-    <p>GitHub Pages が正しく動いています。</p>
-  </body>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Once Human Tier</title>
+
+<!-- 外部CSS -->
+<link rel="stylesheet" href="tier.css">
+</head>
+
+<body>
+<h1>Once Human Tier List</h1>
+<p class="subtitle">Google スプレッドシートから自動更新</p>
+
+<div id="content"></div>
+
+<script>
+// ⭐ Google Sheets CSV URL（あなたのシート ID）
+const sheetID = "1vAozJYflA2QBeDXG_LmIo_SmHWFleFy3ZolVQsADZ8s";
+const sheetName = "once-human-tier";
+
+const csvUrl =
+  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+
+// CSV → JSON 変換
+function parseCSV(text) {
+    const lines = text.split("\n").filter(Boolean);
+    const headers = lines[0].split(",");
+    return lines.slice(1).map(row => {
+        const cols = row.split(",");
+        const obj = {};
+        headers.forEach((h, i) => {
+            obj[h.trim()] = cols[i] ? cols[i].trim() : "";
+        });
+        return obj;
+    });
+}
+
+// 表示処理
+fetch(csvUrl)
+  .then(res => res.text())
+  .then(text => {
+      const data = parseCSV(text);
+
+      // Tier ごとにグループ化
+      const groups = {};
+      data.forEach(item => {
+          if (!groups[item.tier]) groups[item.tier] = [];
+          groups[item.tier].push(item);
+      });
+
+      // HTML 出力
+      const container = document.getElementById("content");
+      Object.keys(groups).sort().forEach(tier => {
+          const section = document.createElement("div");
+          section.className = "tier-section";
+
+          section.innerHTML += `<div class="tier-title">Tier ${tier}</div>`;
+
+          groups[tier].forEach(item => {
+              section.innerHTML += `
+                <div class="item">
+                    <img src="${item.image}" />
+                    <div class="name">${item.name}</div>
+                </div>
+              `;
+          });
+
+          container.appendChild(section);
+      });
+  });
+</script>
+
+</body>
 </html>
