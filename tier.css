@@ -1,3 +1,7 @@
+/* =====================
+   基本スタイル（PC）
+===================== */
+
 body {
     font-family: Arial, sans-serif;
     background: #111;
@@ -6,9 +10,24 @@ body {
 }
 
 h1 {
-    font-size: 36px;
     text-align: center;
     margin-bottom: 5px;
+}
+
+/* ===== シート画像共通スタイル ===== */
+.sheet-image {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 10px;
+}
+
+.sheet-image img {
+  width: 420px;        /* ← 基準サイズ（ここを変えれば全ページ反映） */
+  max-width: 90vw;     /* ← スマホ対応 */
+  aspect-ratio: 16 / 9; /* ← 比率を固定（正方形なら 1 / 1） */
+  object-fit: cover;  /* ← 枠に収めてトリミング */
+  border-radius: 14px;
+  background: #222;   /* ← 余白が出た時も綺麗 */
 }
 
 .subtitle {
@@ -17,58 +36,115 @@ h1 {
     margin-bottom: 30px;
 }
 
-/* Tier block全体 */
 .tier-section {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     border-radius: 10px;
     overflow: hidden;
 }
 
-/* Tierタイトル */
 .tier-title {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: bold;
-    padding: 12px;
+    padding: 10px 14px;
     color: #111;
 }
 
-/* Tierごとの色 */
-.tier-S { background: #ff4f4f; }   /* 赤 */
-.tier-A { background: #ff914d; }   /* オレンジ */
-.tier-B { background: #ffe066; }   /* 黄 */
-.tier-C { background: #6edb6e; }   /* 緑 */
-.tier-D { background: #4dbbff; }   /* 水色 */
-.tier-E { background: #b38cff; }   /* 紫 */
-.tier-F { background: #999999; }   /* グレー */
+/* Tierカラー */
+.tier-S { background: #ff4f4f; }
+.tier-A { background: #ff914d; }
+.tier-B { background: #ffe066; }
+.tier-C { background: #6edb6e; }
+.tier-D { background: #4dbbff; }
+.tier-E { background: #b38cff; }
+.tier-F { background: #999; }
 
-/* アイテムを横並びで表示 */
 .tier-items {
     background: #222;
-    padding: 15px;
+    padding: 12px;
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    justify-content: flex-start;
 }
 
-/* 個々のアイテム */
 .item {
-    width: 120px;
+    width: 110px;
     text-align: center;
 }
 
-/* 画像 */
 .item img {
     width: 80px;
     height: 80px;
     object-fit: contain;
-    border-radius: 8px;
     background: #333;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 6px;
 }
 
-/* 名前 */
 .name {
     margin-top: 6px;
-    font-size: 15px;
+    font-size: 14px;
+}
+
+/* =====================
+   📱 スマホ最適化
+===================== */
+
+@media (max-width: 768px) {
+
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
+
+    .subtitle {
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .tier-title {
+        font-size: 18px;
+        padding: 8px 10px;
+    }
+
+    .tier-items {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .item {
+        width: 80px;
+    }
+
+    .item img {
+        width: 60px;
+        height: 60px;
+        padding: 4px;
+    }
+
+    .name {
+        font-size: 12px;
+    }
+}
+
+/* =====================
+   📱 超小型端末（iPhone SE等）
+===================== */
+
+@media (max-width: 420px) {
+
+    .item {
+        width: 70px;
+    }
+
+    .item img {
+        width: 52px;
+        height: 52px;
+    }
+
+    .name {
+        font-size: 11px;
+    }
 }

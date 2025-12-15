@@ -1,97 +1,88 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Once Human Tier</title>
-
-<!-- 外部CSS -->
-<link rel="stylesheet" href="tier.css">
-</head>
-
-<body>
-<h1>Once Human Tier List</h1>
-<p class="subtitle">Google スプレッドシートから自動更新</p>
-
-<div id="content"></div>
-
 <script>
-// ==============================
-// Google Sheets 設定
-// ==============================
+const BASE_URL = "https://networkrecreation.github.io/once-human-tier/";
 const sheetID = "1vAozJYflA2QBeDXG_LmIo_SmHWFleFy3ZolVQsADZ8s";
-const sheetName = "once-human-tier";
+
+const params = new URLSearchParams(location.search);
+const sheetName = params.get("sheet") || "once_human"; // ← 超重要
+
+const displayName = sheetName.replace(/_/g, " ");
+
+document.getElementById("subtitle").textContent =
+  `"${displayName}" Tier`;
+
+const sheetImage = document.getElementById("sheetImage");
+sheetImage.src = BASE_URL + "img/" + sheetName + ".png";
+sheetImage.alt = displayName;
 
 const csvUrl =
   `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
-// ==============================
-// CSV → JSON（壊れない版）
-// ==============================
 function parseCSV(text) {
-    const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
-    const headers = rows[0].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-
-    return rows.slice(1).map(row => {
-        const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-        const obj = {};
-        headers.forEach((h, i) => {
-            obj[h.replace(/"/g, "").trim()] =
-                cols[i] ? cols[i].replace(/"/g, "").trim() : "";
-        });
-        return obj;
-    });
+  return text
+    .split(/\r?\n/)
+    .filter(r => r.trim())
+    .map(row =>
+      row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)
+        .map(c => c.replace(/"/g, "").trim())
+    );
 }
 
-// Tier 表示順
 const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
 
-// ==============================
-// データ取得 & 描画
-// ==============================
 fetch(csvUrl)
   .then(res => res.text())
   .then(text => {
-      const data = parseCSV(text);
-      const groups = {};
+    const rows = parseCSV(text);
 
-      data.forEach(item => {
-          if (!groups[item.tier]) groups[item.tier] = [];
-          groups[item.tier].push(item);
+    // ========= description =========
+    if (rows[0][0] === "#description") {
+      document.getElementById("description").textContent = rows[0][1] || "";
+    }
+
+    // ========= header =========
+    const headers = rows[1];
+
+    // ========= data =========
+    const data = rows.slice(2).map(cols => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = cols[i] || "");
+      return obj;
+    });
+
+    const groups = {};
+    data.forEach(item => {
+      if (!groups[item.tier]) groups[item.tier] = [];
+      groups[item.tier].push(item);
+    });
+
+    const container = document.getElementById("content");
+
+    tierOrder.forEach(tier => {
+      if (!groups[tier]) return;
+
+      const section = document.createElement("div");
+      section.className = "tier-section";
+      section.innerHTML =
+        `<div class="tier-title tier-${tier}">Tier ${tier}</div>`;
+
+      const itemsBox = document.createElement("div");
+      itemsBox.className = "tier-items";
+
+      groups[tier].forEach(item => {
+        const imgSrc = BASE_URL + "img/" + item.image;
+
+        itemsBox.innerHTML += `
+          <div class="item"
+               onclick="location.href='index.html?sheet=${item.link}'">
+            <img src="${imgSrc}" alt="${item.name}">
+            <div class="name">${item.name}</div>
+          </div>
+        `;
       });
 
-      const container = document.getElementById("content");
-
-      tierOrder.forEach(tier => {
-          if (!groups[tier]) return;
-
-          const section = document.createElement("div");
-          section.className = "tier-section";
-
-          // Tier タイトル（色付き）
-          section.innerHTML +=
-            `<div class="tier-title tier-${tier}">Tier ${tier}</div>`;
-
-          const itemsBox = document.createElement("div");
-          itemsBox.className = "tier-items";
-
-          groups[tier].forEach(item => {
-              itemsBox.innerHTML += `
-                <div class="item">
-                    <img src="${item.image}" alt="${item.name}">
-                    <div class="name">${item.name}</div>
-                </div>
-              `;
-          });
-
-          section.appendChild(itemsBox);
-          container.appendChild(section);
-      });
+      section.appendChild(itemsBox);
+      container.appendChild(section);
+    });
   })
-  .catch(err => {
-      console.error("CSV 読み込みエラー:", err);
-  });
+  .catch(err => console.error("CSV error:", err));
 </script>
-
-</body>
-</html>
