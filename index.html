@@ -1,88 +1,47 @@
-<script>
-const BASE_URL = "https://networkrecreation.github.io/once-human-tier/";
-const sheetID = "1vAozJYflA2QBeDXG_LmIo_SmHWFleFy3ZolVQsADZ8s";
+<!DOCTYPE html>
+<html lang="ja">
 
-const params = new URLSearchParams(location.search);
-const sheetName = params.get("sheet") || "once_human"; // ← 超重要
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Once Human Tier</title>
 
-const displayName = sheetName.replace(/_/g, " ");
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="sidebar.css">
+  <link rel="stylesheet" href="tier.css">
+</head>
 
-document.getElementById("subtitle").textContent =
-  `"${displayName}" Tier`;
+<body>
 
-const sheetImage = document.getElementById("sheetImage");
-sheetImage.src = BASE_URL + "img/" + sheetName + ".png";
-sheetImage.alt = displayName;
+  <div class="layout">
 
-const csvUrl =
-  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+    <!-- 左サイドバー -->
+    <div id="sidebar"></div>
 
-function parseCSV(text) {
-  return text
-    .split(/\r?\n/)
-    .filter(r => r.trim())
-    .map(row =>
-      row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)
-        .map(c => c.replace(/"/g, "").trim())
-    );
-}
+    <!-- メイン -->
+    <div id="main">
 
-const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
+      <h1>Once Human Tier List</h1>
 
-fetch(csvUrl)
-  .then(res => res.text())
-  .then(text => {
-    const rows = parseCSV(text);
+      <div class="sheet-image">
+        <img id="sheetImage" alt="">
+      </div>
 
-    // ========= description =========
-    if (rows[0][0] === "#description") {
-      document.getElementById("description").textContent = rows[0][1] || "";
-    }
+      <p id="subtitle" class="subtitle"></p>
+      <p id="description" class="description"></p>
 
-    // ========= header =========
-    const headers = rows[1];
+      <div id="content"></div>
 
-    // ========= data =========
-    const data = rows.slice(2).map(cols => {
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = cols[i] || "");
-      return obj;
-    });
+    </div>
 
-    const groups = {};
-    data.forEach(item => {
-      if (!groups[item.tier]) groups[item.tier] = [];
-      groups[item.tier].push(item);
-    });
+  </div>
 
-    const container = document.getElementById("content");
+  <button id="topButton" aria-label="Back to top">↑</button>
 
-    tierOrder.forEach(tier => {
-      if (!groups[tier]) return;
+  <!-- JS分割 -->
+  <script src="tier.js"></script>
+  <script src="sidebar.js"></script>
 
-      const section = document.createElement("div");
-      section.className = "tier-section";
-      section.innerHTML =
-        `<div class="tier-title tier-${tier}">Tier ${tier}</div>`;
+</body>
 
-      const itemsBox = document.createElement("div");
-      itemsBox.className = "tier-items";
-
-      groups[tier].forEach(item => {
-        const imgSrc = BASE_URL + "img/" + item.image;
-
-        itemsBox.innerHTML += `
-          <div class="item"
-               onclick="location.href='index.html?sheet=${item.link}'">
-            <img src="${imgSrc}" alt="${item.name}">
-            <div class="name">${item.name}</div>
-          </div>
-        `;
-      });
-
-      section.appendChild(itemsBox);
-      container.appendChild(section);
-    });
-  })
-  .catch(err => console.error("CSV error:", err));
-</script>
+</html>

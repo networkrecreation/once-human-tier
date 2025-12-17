@@ -1,0 +1,154 @@
+/* =================================================
+   Sidebar
+================================================= */
+#sidebar {
+  width: 220px;
+  background: linear-gradient(180deg, #0f0f0f, #111);
+  padding: 12px 10px;
+  border-right: 1px solid #222;
+
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* scrollbar */
+#sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+#sidebar::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+/* =================================================
+   Parent Tab
+================================================= */
+#sidebar .tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 10px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  cursor: pointer;
+
+  background: transparent;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+#sidebar .tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+#sidebar .tab.active {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.12),
+    rgba(255,255,255,0)
+  );
+  box-shadow: inset 3px 0 0 #4dbbff;
+}
+
+/* =================================================
+   Toggle
+================================================= */
+.sidebar-toggle {
+  width: 18px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+#sidebar .tab:hover .sidebar-toggle {
+  opacity: 1;
+}
+
+/* =================================================
+   Tab Link Area（← ここが重要）
+================================================= */
+.tab-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  flex: 1;
+  min-height: 48px;
+}
+
+/* text */
+.tab-link span {
+  font-size: 14px;
+  line-height: 1.2;
+  opacity: 0.9;
+}
+
+#sidebar .tab.active .tab-link span {
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* image */
+.tab-link img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #1e1e1e;
+  flex-shrink: 0;
+}
+
+/* =================================================
+   Children
+================================================= */
+.sidebar-children {
+  margin-left: 18px;
+  padding-left: 10px;
+  border-left: 1px solid #222;
+  margin-bottom: 6px;
+}
+
+.child-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 8px;
+  margin: 2px 0;
+  border-radius: 8px;
+  cursor: pointer;
+
+  font-size: 13px;
+  opacity: 0.7;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.child-item:hover {
+  background: rgba(255,255,255,0.06);
+  opacity: 0.95;
+}
+
+.child-item.active {
+  opacity: 1;
+  background: rgba(77,187,255,0.15);
+}
+
+.child-item img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #1e1e1e;
+}
+
+/* =================================================
+   Mobile
+================================================= */
+@media (max-width: 768px) {
+  #sidebar {
+    display: none;
+  }
+}
