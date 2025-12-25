@@ -47,16 +47,23 @@ fetch(csvUrl)
     const rows = parseCSV(text);
     const container = document.getElementById("content");
 
-    // I（ページ情報）
+    // ==========================
+    // I 行（ページ情報）
+    // ==========================
     const infoRow = rows.find(r => r.tier === "I");
     if (infoRow) {
       document.getElementById("subtitle").textContent =
         `${infoRow.name} Tier`;
+
       document.getElementById("description").textContent =
-        infoRow.image || "";
+        infoRow.info && infoRow.info !== "---"
+          ? infoRow.info
+          : "";
     }
 
+    // ==========================
     // Tier データ
+    // ==========================
     const tierItems = rows.filter(r => tierOrder.includes(r.tier));
     const groups = {};
 
@@ -65,7 +72,9 @@ fetch(csvUrl)
       groups[item.tier].push(item);
     });
 
+    // ==========================
     // Tier 描画
+    // ==========================
     tierOrder.forEach(tier => {
       if (!groups[tier]) return;
 
@@ -79,12 +88,15 @@ fetch(csvUrl)
       itemsBox.className = "tier-items";
 
       groups[tier].forEach(item => {
-        const imgSrc = BASE_URL + "img/" + item.image;
+        const hasImage = item.image && item.image !== "---";
+        const imgSrc = hasImage
+          ? BASE_URL + "img/" + item.image
+          : "";
 
         itemsBox.innerHTML += `
           <div class="item"
                onclick="location.href='index.html?sheet=${item.link}'">
-            <img src="${imgSrc}" alt="${item.name}">
+            ${hasImage ? `<img src="${imgSrc}" alt="${item.name}">` : ""}
             <div class="name">${item.name}</div>
           </div>
         `;
@@ -94,8 +106,14 @@ fetch(csvUrl)
       container.appendChild(section);
     });
 
+    // ==========================
     // 詳細説明
-    if (tierItems.length) {
+    // ==========================
+    const detailItems = tierItems.filter(
+      item => item.info && item.info !== "---"
+    );
+
+    if (detailItems.length) {
       const textSection = document.createElement("div");
       textSection.className = "text-section";
 
@@ -103,17 +121,18 @@ fetch(csvUrl)
       title.textContent = "詳細説明";
       textSection.appendChild(title);
 
-      tierItems.forEach(item => {
-        if (!item.info) return;
-
-        const imgSrc = BASE_URL + "img/" + item.image;
+      detailItems.forEach(item => {
+        const hasImage = item.image && item.image !== "---";
+        const imgSrc = hasImage
+          ? BASE_URL + "img/" + item.image
+          : "";
 
         const row = document.createElement("div");
         row.className = "text-row";
 
         row.innerHTML = `
           <a href="index.html?sheet=${item.link}">
-            <img src="${imgSrc}" alt="${item.name}">
+            ${hasImage ? `<img src="${imgSrc}" alt="${item.name}">` : ""}
           </a>
           <div class="text-row-content">
             <h3>${item.name}</h3>
