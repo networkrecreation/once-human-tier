@@ -2,10 +2,11 @@
 // 設定
 // ==============================
 const BASE_URL = "https://networkrecreation.github.io/once-human-tier/";
-const sheetID = "1vAozJYflA2QBeDXG_LmIo_SmHWFleFy3ZolVQsADZ8s";
+const sheetID = "1UXkHW7ANcE2neVo6iD6OxqwnW_scyBezZEcRFD8ImxI";
+const DATA_SHEET = "data";
 
 const params = new URLSearchParams(location.search);
-const sheetName = params.get("sheet") || "once_human";
+const sheetId = params.get("sheet") ?? "0";
 
 // ==============================
 // CSV パース
@@ -29,17 +30,10 @@ function parseCSV(text) {
 const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
 
 // ==============================
-// シート画像
-// ==============================
-const sheetImage = document.getElementById("sheetImage");
-sheetImage.src = BASE_URL + "img/" + sheetName + ".png";
-sheetImage.alt = sheetName;
-
-// ==============================
-// Tier 表示
+// CSV 読み込み
 // ==============================
 const csvUrl =
-  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${DATA_SHEET}`;
 
 fetch(csvUrl)
   .then(res => res.text())
@@ -48,23 +42,26 @@ fetch(csvUrl)
     const container = document.getElementById("content");
 
     // ==========================
-    // I 行（ページ情報）
+    // 対象 sheet ブロック抽出
     // ==========================
-    const infoRow = rows.find(r => r.tier === "I");
+    const pageRows = rows.filter(r => r.sheet === sheetId);
+
+    // ==========================
+    // I / O 行（ページ情報）
+    // ==========================
+    const infoRow = pageRows.find(r => r.tier === "I" || r.tier === "O");
     if (infoRow) {
       document.getElementById("subtitle").textContent =
         `${infoRow.name} Tier`;
 
       document.getElementById("description").textContent =
-        infoRow.info && infoRow.info !== "---"
-          ? infoRow.info
-          : "";
+        infoRow.info && infoRow.info !== "---" ? infoRow.info : "";
     }
 
     // ==========================
     // Tier データ
     // ==========================
-    const tierItems = rows.filter(r => tierOrder.includes(r.tier));
+    const tierItems = pageRows.filter(r => tierOrder.includes(r.tier));
     const groups = {};
 
     tierItems.forEach(item => {
@@ -89,9 +86,7 @@ fetch(csvUrl)
 
       groups[tier].forEach(item => {
         const hasImage = item.image && item.image !== "---";
-        const imgSrc = hasImage
-          ? BASE_URL + "img/" + item.image
-          : "";
+        const imgSrc = hasImage ? BASE_URL + "img/" + item.image : "";
 
         itemsBox.innerHTML += `
           <div class="item"
@@ -107,7 +102,7 @@ fetch(csvUrl)
     });
 
     // ==========================
-    // 詳細説明
+    // 詳細説明（infoあり）
     // ==========================
     const detailItems = tierItems.filter(
       item => item.info && item.info !== "---"
@@ -123,9 +118,7 @@ fetch(csvUrl)
 
       detailItems.forEach(item => {
         const hasImage = item.image && item.image !== "---";
-        const imgSrc = hasImage
-          ? BASE_URL + "img/" + item.image
-          : "";
+        const imgSrc = hasImage ? BASE_URL + "img/" + item.image : "";
 
         const row = document.createElement("div");
         row.className = "text-row";
@@ -154,11 +147,7 @@ fetch(csvUrl)
 const topButton = document.getElementById("topButton");
 
 window.addEventListener("scroll", () => {
-  if (window.scrollY > 300) {
-    topButton.classList.add("show");
-  } else {
-    topButton.classList.remove("show");
-  }
+  topButton.classList.toggle("show", window.scrollY > 300);
 });
 
 topButton.addEventListener("click", () => {

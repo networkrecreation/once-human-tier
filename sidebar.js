@@ -1,114 +1,124 @@
 // ==============================
-// Sidebar (index sheet)
+// Sidebar (sidebar_data sheet)
 // ==============================
 
 console.log("sidebar.js loaded");
 
-// index sheet CSV
-const indexCsvUrl =
-  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=index`;
+const sheetID = "1UXkHW7ANcE2neVo6iD6OxqwnW_scyBezZEcRFD8ImxI";
+const DATA_SHEET = "sidebar_data";
 
-fetch(indexCsvUrl)
+const params = new URLSearchParams(location.search);
+const currentSheetId = params.get("sheet") ?? "0";
+
+// CSV URL
+const csvUrl =
+  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${DATA_SHEET}`;
+
+fetch(csvUrl)
   .then(res => res.text())
   .then(text => {
     const rows = parseCSV(text);
     const sidebar = document.getElementById("sidebar");
 
-    rows.forEach(row => {
+    // ==========================
+    // sheet ごとにグループ化
+    // ==========================
+    const groups = {};
+    rows.forEach(r => {
+      if (!groups[r.sheet]) groups[r.sheet] = [];
+      groups[r.sheet].push(r);
+    });
 
-      // ==========================
+    // ==========================
+    // 親（tier I）でループ
+    // ==========================
+    Object.keys(groups).forEach(sheetId => {
+      const block = groups[sheetId];
+
+      const parent = block.find(r => r.tier === "I");
+      if (!parent) return;
+
+      const children = block.filter(
+        r => r.tier !== "I" && r.tier !== "O"
+      );
+
+      // ======================
       // 親タブ
-      // ==========================
+      // ======================
       const tab = document.createElement("div");
       tab.className = "tab";
 
-      // ▶ toggle
+      // toggle
       let toggle = null;
-
-      if (row.children && row.link !== "once_human") {
+      if (children.length) {
         toggle = document.createElement("span");
         toggle.className = "sidebar-toggle";
         toggle.textContent = "▶";
         tab.appendChild(toggle);
       }
 
-      // 親リンク領域（画像＋文字）
+      // 親リンク
       const linkArea = document.createElement("div");
       linkArea.className = "tab-link";
 
-      const img = document.createElement("img");
-      img.src = BASE_URL + "img/" + row.sheet + ".png";
-      img.onerror = () => img.remove();
+      if (parent.image && parent.image !== "---") {
+        const img = document.createElement("img");
+        img.src = BASE_URL + "img/" + parent.image;
+        img.onerror = () => img.remove();
+        linkArea.appendChild(img);
+      }
 
       const label = document.createElement("span");
-      label.textContent = row.name;
-
-      linkArea.appendChild(img);
+      label.textContent = parent.name;
       linkArea.appendChild(label);
+
       tab.appendChild(linkArea);
 
-      // active 判定
-      if (row.link === sheetName) {
+      // active
+      if (sheetId === currentSheetId) {
         tab.classList.add("active");
       }
 
-      // 親リンククリック（遷移）
-      linkArea.onclick = (e) => {
+      linkArea.onclick = e => {
         e.stopPropagation();
-        location.href = `index.html?sheet=${row.link}`;
+        location.href = `index.html?sheet=${sheetId}`;
       };
 
       sidebar.appendChild(tab);
 
-      // ==========================
-      // children（once_human 除外）
-      // ==========================
-      if (!row.children || row.link === "once_human") {
-        return;
-      }
+      // ======================
+      // children
+      // ======================
+      if (!children.length) return;
 
       const childrenBox = document.createElement("div");
       childrenBox.className = "sidebar-children";
       childrenBox.style.display = "none";
 
-      const children = row.children
-        .split(",")
-        .map(c => c.trim())
-        .filter(Boolean);
-
-      children.forEach(childStr => {
-        const parts = childStr.split(":");
-        if (parts.length < 4) return;
-
-        const tier = parts[0];
-        const name = parts[1];
-        const imgFile = parts[2];
-        const link = parts[3];
-
+      children.forEach(childRow => {
         const child = document.createElement("div");
         child.className = "child-item";
 
-        const childImg = document.createElement("img");
-        childImg.src = BASE_URL + "img/" + imgFile;
-        childImg.onerror = () => childImg.remove();
+        if (childRow.image && childRow.image !== "---") {
+          const img = document.createElement("img");
+          img.src = BASE_URL + "img/" + childRow.image;
+          img.onerror = () => img.remove();
+          child.appendChild(img);
+        }
 
-        const childLabel = document.createElement("span");
-        childLabel.textContent = `${tier} ${name}`;
+        const label = document.createElement("span");
+        label.textContent = `${childRow.tier} ${childRow.name}`;
+        child.appendChild(label);
 
-        child.appendChild(childImg);
-        child.appendChild(childLabel);
-
-        // active child
-        if (link === sheetName) {
+        if (childRow.link === currentSheetId) {
           child.classList.add("active");
           childrenBox.style.display = "block";
           toggle.textContent = "▼";
         }
 
-        // child click（遷移）
-        child.onclick = (e) => {
+        child.onclick = e => {
           e.stopPropagation();
-          location.href = `index.html?sheet=${link}`;
+          location.href = `index.html?sheet=${childRow.link}`;
         };
 
         childrenBox.appendChild(child);
@@ -116,9 +126,7 @@ fetch(indexCsvUrl)
 
       sidebar.appendChild(childrenBox);
 
-      // ==========================
-      // 開閉判定（縦に広い）
-      // ==========================
+      // toggle open/close
       tab.onclick = () => {
         const opened = childrenBox.style.display === "block";
         childrenBox.style.display = opened ? "none" : "block";
