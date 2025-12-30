@@ -2,12 +2,12 @@
 // 設定
 // ==============================
 const BASE_URL = "https://networkrecreation.github.io/once-human-tier/";
-const SHEET_ID = "1UXkHW7ANcE2neVo6iD6OxqwnW_scyBezZEcRFD8ImxI";
-const DATA_SHEET = "data";
+const sheetID = "1UXkHW7ANcE2neVo6iD6OxqwnW_scyBezZEcRFD8ImxI";
 
-// URL ?sheet=35 など
 const params = new URLSearchParams(location.search);
-const sheetNo = params.get("sheet") || "0";
+const currentSheet = params.get("sheet"); // 数字 or null
+
+const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
 
 // ==============================
 // CSV パース
@@ -28,129 +28,94 @@ function parseCSV(text) {
   });
 }
 
-// Tier 表示順
-const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
-
 // ==============================
-// CSV 読み込み
+// CSV 読み込み（dataシート）
 // ==============================
 const csvUrl =
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${DATA_SHEET}`;
+  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=data`;
 
 fetch(csvUrl)
   .then(res => res.text())
   .then(text => {
     const rows = parseCSV(text);
-
-    // ==========================
-    // 対象 sheet のみ抽出
-    // ==========================
-    const pageRows = rows.filter(r => String(r.sheet) === String(sheetNo));
-
-    if (!pageRows.length) {
-      document.getElementById("content").innerHTML =
-        `<p>データが見つかりません (sheet=${sheetNo})</p>`;
-      return;
-    }
-
     const container = document.getElementById("content");
+    container.innerHTML = "";
 
     // ==========================
-    // I 行（ページ情報）
+    // sheet ごとにグループ化
     // ==========================
-    const infoRow = pageRows.find(r => r.tier === "I");
-    if (infoRow) {
-      document.getElementById("subtitle").textContent =
-        `${infoRow.name} Tier`;
-
-      document.getElementById("description").textContent =
-        infoRow.info && infoRow.info !== "---" ? infoRow.info : "";
-    }
-
-    // ==========================
-    // Tier 行（S〜F）
-    // ==========================
-    const tierItems = pageRows.filter(r => tierOrder.includes(r.tier));
-
-    const groups = {};
-    tierItems.forEach(item => {
-      if (!groups[item.tier]) groups[item.tier] = [];
-      groups[item.tier].push(item);
+    const sheetGroups = {};
+    rows.forEach(r => {
+      if (!sheetGroups[r.sheet]) sheetGroups[r.sheet] = [];
+      sheetGroups[r.sheet].push(r);
     });
 
-    // ==========================
-    // Tier 表示
-    // ==========================
-    tierOrder.forEach(tier => {
-      if (!groups[tier]) return;
+    // sheet番号昇順で処理
+    Object.keys(sheetGroups)
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach(sheetNo => {
+        const sheetRows = sheetGroups[sheetNo];
 
-      const section = document.createElement("div");
-      section.className = "tier-section";
+        // ======================
+        // I 行（ページ情報）
+        // ======================
+        const infoRow = sheetRows.find(r => r.tier === "I");
+        if (!infoRow) return;
 
-      section.innerHTML =
-        `<div class="tier-title tier-${tier}">Tier ${tier}</div>`;
+        const section = document.createElement("section");
+        section.className = "sheet-section";
 
-      const itemsBox = document.createElement("div");
-      itemsBox.className = "tier-items";
-
-      groups[tier].forEach(item => {
-        const hasImage = item.image && item.image !== "---";
-        const imgSrc = hasImage
-          ? BASE_URL + "img/" + item.image
-          : "";
-
-        itemsBox.innerHTML += `
-          <div class="item"
-               onclick="location.href='index.html?sheet=${item.link}'">
-            ${hasImage ? `<img src="${imgSrc}" alt="${item.name}">` : ""}
-            <div class="name">${item.name}</div>
-          </div>
-        `;
-      });
-
-      section.appendChild(itemsBox);
-      container.appendChild(section);
-    });
-
-    // ==========================
-    // 詳細説明（infoあり全量）
-    // ==========================
-    const detailItems = pageRows.filter(
-      r => r.info && r.info !== "---" && r.tier !== "I"
-    );
-
-    if (detailItems.length) {
-      const textSection = document.createElement("div");
-      textSection.className = "text-section";
-
-      const title = document.createElement("h2");
-      title.textContent = "詳細説明";
-      textSection.appendChild(title);
-
-      detailItems.forEach(item => {
-        const hasImage = item.image && item.image !== "---";
-        const imgSrc = hasImage
-          ? BASE_URL + "img/" + item.image
-          : "";
-
-        const row = document.createElement("div");
-        row.className = "text-row";
-
-        row.innerHTML = `
-          <a href="index.html?sheet=${item.link}">
-            ${hasImage ? `<img src="${imgSrc}" alt="${item.name}">` : ""}
-          </a>
-          <div class="text-row-content">
-            <h3>${item.name}</h3>
-            <p>${item.info}</p>
-          </div>
+        // 見出し
+        section.innerHTML = `
+          <h2 class="sheet-title">
+            ${infoRow.name}
+            <span class="sheet-id">#${sheetNo}</span>
+          </h2>
+          ${infoRow.info && infoRow.info !== "---"
+            ? `<p class="sheet-desc">${infoRow.info}</p>`
+            : ""}
         `;
 
-        textSection.appendChild(row);
-      });
+        // ======================
+        // Tier 表示
+        // ======================
+        tierOrder.forEach(tier => {
+          const items = sheetRows.filter(r => r.tier === tier);
+          if (!items.length) return;
 
-      container.appendChild(textSection);
-    }
+          const tierBox = document.createElement("div");
+          tierBox.className = "tier-section";
+
+          tierBox.innerHTML =
+            `<div class="tier-title tier-${tier}">Tier ${tier}</div>`;
+
+          const itemsBox = document.createElement("div");
+          itemsBox.className = "tier-items";
+
+          items.forEach(item => {
+            const hasImage = item.image && item.image !== "---";
+            const imgSrc = hasImage
+              ? BASE_URL + "img/" + item.image
+              : "";
+
+            const activeClass =
+              currentSheet === item.link ? "active" : "";
+
+            itemsBox.innerHTML += `
+              <div class="item ${activeClass}"
+                   onclick="location.href='index.html?sheet=${item.link}'">
+                ${hasImage ? `<img src="${imgSrc}" alt="${item.name}">` : ""}
+                <div class="name">${item.name}</div>
+              </div>
+            `;
+          });
+
+          tierBox.appendChild(itemsBox);
+          section.appendChild(tierBox);
+        });
+
+        container.appendChild(section);
+      });
   })
   .catch(err => console.error("CSV error:", err));
 
@@ -160,7 +125,11 @@ fetch(csvUrl)
 const topButton = document.getElementById("topButton");
 
 window.addEventListener("scroll", () => {
-  topButton.classList.toggle("show", window.scrollY > 300);
+  if (window.scrollY > 300) {
+    topButton.classList.add("show");
+  } else {
+    topButton.classList.remove("show");
+  }
 });
 
 topButton.addEventListener("click", () => {
