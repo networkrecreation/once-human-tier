@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Once Human Tier</title>
+  <title>Once Human Tier List</title>
 
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="sidebar.css">
@@ -16,32 +15,23 @@
   <div class="layout">
 
     <!-- 左サイドバー -->
-    <div id="sidebar"></div>
+    <aside id="sidebar"></aside>
 
     <!-- メイン -->
-    <div id="main">
-
+    <main id="main">
       <h1>Once Human Tier List</h1>
 
-      <div class="sheet-image">
-        <img id="sheetImage" alt="">
-      </div>
-
-      <p id="subtitle" class="subtitle"></p>
-      <p id="description" class="description"></p>
-
+      <!-- ここに tier.js が全量描画する -->
       <div id="content"></div>
-
-    </div>
+    </main>
 
   </div>
 
   <button id="topButton" aria-label="Back to top">↑</button>
 
-  <!-- JS分割 -->
+  <!-- JS -->
   <script src="tier.js"></script>
   <script src="sidebar.js"></script>
 
 </body>
-
 </html>
