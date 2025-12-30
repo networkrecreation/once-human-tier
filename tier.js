@@ -29,7 +29,7 @@ function parseCSV(text) {
 }
 
 // ==============================
-// CSV 読み込み（dataシート）
+// CSV 読み込み（dataシートのみ）
 // ==============================
 const csvUrl =
   `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=data`;
@@ -42,7 +42,7 @@ fetch(csvUrl)
     container.innerHTML = "";
 
     // ==========================
-    // sheet ごとにグループ化
+    // sheet番号ごとにグループ化
     // ==========================
     const sheetGroups = {};
     rows.forEach(r => {
@@ -50,9 +50,12 @@ fetch(csvUrl)
       sheetGroups[r.sheet].push(r);
     });
 
-    // sheet番号昇順で処理
+    // ==========================
+    // sheet番号 昇順で全量描画
+    // ==========================
     Object.keys(sheetGroups)
-      .sort((a, b) => Number(a) - Number(b))
+      .map(n => Number(n))
+      .sort((a, b) => a - b)
       .forEach(sheetNo => {
         const sheetRows = sheetGroups[sheetNo];
 
@@ -65,19 +68,37 @@ fetch(csvUrl)
         const section = document.createElement("section");
         section.className = "sheet-section";
 
-        // 見出し
-        section.innerHTML = `
+        // ----- 見出し + I画像 -----
+        const header = document.createElement("div");
+        header.className = "sheet-header";
+
+        if (infoRow.image && infoRow.image !== "---") {
+          const img = document.createElement("img");
+          img.src = `${BASE_URL}img/${infoRow.image}?v=${Date.now()}`;
+          img.alt = infoRow.name;
+          img.className = "sheet-image";
+          header.appendChild(img);
+        }
+
+        const titleBox = document.createElement("div");
+        titleBox.className = "sheet-title-box";
+        titleBox.innerHTML = `
           <h2 class="sheet-title">
             ${infoRow.name}
             <span class="sheet-id">#${sheetNo}</span>
           </h2>
-          ${infoRow.info && infoRow.info !== "---"
-            ? `<p class="sheet-desc">${infoRow.info}</p>`
-            : ""}
+          ${
+            infoRow.info && infoRow.info !== "---"
+              ? `<p class="sheet-desc">${infoRow.info}</p>`
+              : ""
+          }
         `;
 
+        header.appendChild(titleBox);
+        section.appendChild(header);
+
         // ======================
-        // Tier 表示
+        // Tier 表示（S〜F）
         // ======================
         tierOrder.forEach(tier => {
           const items = sheetRows.filter(r => r.tier === tier);
@@ -95,19 +116,33 @@ fetch(csvUrl)
           items.forEach(item => {
             const hasImage = item.image && item.image !== "---";
             const imgSrc = hasImage
-              ? BASE_URL + "img/" + item.image
+              ? `${BASE_URL}img/${item.image}?v=${Date.now()}`
               : "";
 
             const activeClass =
               currentSheet === item.link ? "active" : "";
 
-            itemsBox.innerHTML += `
-              <div class="item ${activeClass}"
-                   onclick="location.href='index.html?sheet=${item.link}'">
-                ${hasImage ? `<img src="${imgSrc}" alt="${item.name}">` : ""}
-                <div class="name">${item.name}</div>
-              </div>
-            `;
+            const itemDiv = document.createElement("div");
+            itemDiv.className = `item ${activeClass}`;
+            itemDiv.onclick = () => {
+              if (item.link) {
+                location.href = `index.html?sheet=${item.link}`;
+              }
+            };
+
+            if (hasImage) {
+              const img = document.createElement("img");
+              img.src = imgSrc;
+              img.alt = item.name;
+              itemDiv.appendChild(img);
+            }
+
+            const name = document.createElement("div");
+            name.className = "name";
+            name.textContent = item.name;
+
+            itemDiv.appendChild(name);
+            itemsBox.appendChild(itemDiv);
           });
 
           tierBox.appendChild(itemsBox);
