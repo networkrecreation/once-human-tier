@@ -2,11 +2,12 @@
 // 設定
 // ==============================
 const BASE_URL = "https://networkrecreation.github.io/once-human-tier/";
-const sheetID = "1UXkHW7ANcE2neVo6iD6OxqwnW_scyBezZEcRFD8ImxI";
+const SHEET_ID = "1UXkHW7ANcE2neVo6iD6OxqwnW_scyBezZEcRFD8ImxI";
 const DATA_SHEET = "data";
 
+// URL ?sheet=35 など
 const params = new URLSearchParams(location.search);
-const sheetId = params.get("sheet") ?? "0";
+const sheetNo = params.get("sheet") || "0";
 
 // ==============================
 // CSV パース
@@ -27,29 +28,37 @@ function parseCSV(text) {
   });
 }
 
+// Tier 表示順
 const tierOrder = ["S", "A", "B", "C", "D", "E", "F"];
 
 // ==============================
 // CSV 読み込み
 // ==============================
 const csvUrl =
-  `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${DATA_SHEET}`;
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${DATA_SHEET}`;
 
 fetch(csvUrl)
   .then(res => res.text())
   .then(text => {
     const rows = parseCSV(text);
+
+    // ==========================
+    // 対象 sheet のみ抽出
+    // ==========================
+    const pageRows = rows.filter(r => String(r.sheet) === String(sheetNo));
+
+    if (!pageRows.length) {
+      document.getElementById("content").innerHTML =
+        `<p>データが見つかりません (sheet=${sheetNo})</p>`;
+      return;
+    }
+
     const container = document.getElementById("content");
 
     // ==========================
-    // 対象 sheet ブロック抽出
+    // I 行（ページ情報）
     // ==========================
-    const pageRows = rows.filter(r => r.sheet === sheetId);
-
-    // ==========================
-    // I / O 行（ページ情報）
-    // ==========================
-    const infoRow = pageRows.find(r => r.tier === "I" || r.tier === "O");
+    const infoRow = pageRows.find(r => r.tier === "I");
     if (infoRow) {
       document.getElementById("subtitle").textContent =
         `${infoRow.name} Tier`;
@@ -59,18 +68,18 @@ fetch(csvUrl)
     }
 
     // ==========================
-    // Tier データ
+    // Tier 行（S〜F）
     // ==========================
     const tierItems = pageRows.filter(r => tierOrder.includes(r.tier));
-    const groups = {};
 
+    const groups = {};
     tierItems.forEach(item => {
       if (!groups[item.tier]) groups[item.tier] = [];
       groups[item.tier].push(item);
     });
 
     // ==========================
-    // Tier 描画
+    // Tier 表示
     // ==========================
     tierOrder.forEach(tier => {
       if (!groups[tier]) return;
@@ -86,7 +95,9 @@ fetch(csvUrl)
 
       groups[tier].forEach(item => {
         const hasImage = item.image && item.image !== "---";
-        const imgSrc = hasImage ? BASE_URL + "img/" + item.image : "";
+        const imgSrc = hasImage
+          ? BASE_URL + "img/" + item.image
+          : "";
 
         itemsBox.innerHTML += `
           <div class="item"
@@ -102,10 +113,10 @@ fetch(csvUrl)
     });
 
     // ==========================
-    // 詳細説明（infoあり）
+    // 詳細説明（infoあり全量）
     // ==========================
-    const detailItems = tierItems.filter(
-      item => item.info && item.info !== "---"
+    const detailItems = pageRows.filter(
+      r => r.info && r.info !== "---" && r.tier !== "I"
     );
 
     if (detailItems.length) {
@@ -118,7 +129,9 @@ fetch(csvUrl)
 
       detailItems.forEach(item => {
         const hasImage = item.image && item.image !== "---";
-        const imgSrc = hasImage ? BASE_URL + "img/" + item.image : "";
+        const imgSrc = hasImage
+          ? BASE_URL + "img/" + item.image
+          : "";
 
         const row = document.createElement("div");
         row.className = "text-row";
